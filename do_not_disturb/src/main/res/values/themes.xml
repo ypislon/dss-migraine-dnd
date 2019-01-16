@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme_DND_Dark" parent="Base.ThemeOverlay.AppCompat.Dark">
+        <!--<item name="android:windowBackground">#1f1f2f</item>-->
+        <!--<item name="android:textAppearance">#ffffff</item>-->
+    </style>
+    <style name="Theme_DND_Light" parent="Base.ThemeOverlay.AppCompat.Light">
+        <!--<item name="android:windowBackground">#ffffff</item>-->
+        <!--<item name="android:textAppearance">#1f1f2f</item>-->
+    </style>
+</resources>

@@ -1,10 +1,13 @@
 package com.digitalsocietyschool.dss_team_brainwash.dss_migraine_dnd.do_not_disturb;
 
+import android.content.res.Resources;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.provider.Settings.System;
 import android.telephony.SmsManager;
+import android.view.ContextThemeWrapper;
 import android.view.ViewGroup.LayoutParams;
 import android.content.Intent;
 import android.os.Build;
@@ -31,8 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
     private int originalBrightness;
 
+    private boolean dndModeEnabled = false;
 
-//
 //    private static void showBrightnessPermissionDialog(final Context context) {
 //
 //        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -83,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
         originalBrightness = System.getInt(getContentResolver(), System.SCREEN_BRIGHTNESS, 0);
 
+        // prompt the user for permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (Settings.System.canWrite(this)) {
                 Log.d("dnd", "got system permissions!");
@@ -120,14 +124,28 @@ public class MainActivity extends AppCompatActivity {
 //            }
         }
 
+        NotificationManager mNotificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        // Check if the notification policy access has been granted for the app
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!mNotificationManager.isNotificationPolicyAccessGranted()) {
+                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                startActivity(intent);
+            }
+        }
+
         Switch toggle = (Switch) findViewById(R.id.switch1);
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     // The toggle is enabled
                     Log.d("dnd", "enabled");
+                    dndModeEnabled = true;
+                    toggleDoNotDisturb();
                 } else {
                     // The toggle is disabled
+                    Log.d("dnd", "disabled");
+                    dndModeEnabled = false;
+                    toggleDoNotDisturb();
                 }
             }
         });
@@ -140,11 +158,13 @@ public class MainActivity extends AppCompatActivity {
 //        getWindow().setAttributes(layoutpars);
     }
 
-    protected void toggleDoNotDisturb(View v) {
+    protected void toggleDoNotDisturb() {
+
         int currentBrightness = System.getInt(getContentResolver(), System.SCREEN_BRIGHTNESS, 0);
 
         // set the brightness to 0
         // TODO
+
         if(originalBrightness != 0 && currentBrightness != 0) {
             int brightness = 0;
             System.putInt(getContentResolver(), System.SCREEN_BRIGHTNESS, brightness);
@@ -155,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
         // set the phone to "do not disturb mode"
         NotificationManager mNotificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         AudioManager mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+
         int ringerMode = mAudioManager.getRingerMode();
         Log.d("dnd", "Ringer Mode:");
         Log.d("dnd", Integer.toString(ringerMode));
@@ -165,21 +186,50 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
                 startActivity(intent);
             } else {
-                if(ringerMode != 0) {
-                    try {
-                        mAudioManager.setRingerMode(0);
-                    } catch (Exception e) {
-                        Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
-                    }
-                }
-            }
-        }
 
-        if(ringerMode != 0) {
-            try {
-                mAudioManager.setRingerMode(0);
-            } catch (Exception e) {
-                Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
+                if(dndModeEnabled) {
+                    // Change the global notification policy to prevent all notifications
+                    mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE);
+                    if (ringerMode != 0) {
+                        try {
+                            mAudioManager.setRingerMode(0);
+                        } catch (Exception e) {
+                            Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
+                        }
+                    }
+                    // Set the background color
+                    Resources res = getResources();
+//                    int color = res.getColor(R.color.colorDark);
+                    int color = ContextCompat.getColor(getApplicationContext(), R.color.colorDark);
+                    ConstraintLayout mainLayout = findViewById(R.id.mainLayout);
+//                    mainLayout.setBackgroundColor(color);
+
+                    ContextThemeWrapper ctx = new ContextThemeWrapper(getApplicationContext(), android.R.style.Theme_Black);
+                    ctx.setTheme(android.R.style.Theme_Black);
+                    recreate();
+
+                } else { // dnd mode is not enabled
+                    mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL);
+                    if (ringerMode == 0) {
+                        try {
+                            mAudioManager.setRingerMode(1);
+                        } catch (Exception e) {
+                            Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
+                        }
+                    }
+                    // Set the background color
+                    Resources res = getResources();
+//                    int color = res.getColor(R.color.colorLight);
+                    int color = ContextCompat.getColor(getApplicationContext(), R.color.colorLight);
+                    ConstraintLayout mainLayout = findViewById(R.id.mainLayout);
+//                    mainLayout.setBackgroundColor(color);
+
+                    ContextThemeWrapper ctx = new ContextThemeWrapper(getApplicationContext(), android.R.style.Theme_Light);
+                    ctx.setTheme(R.style.Theme_DND_Light);
+                    recreate();
+                }
+//                setTheme(android.R.style.Theme_Black);
+//                recreate();
             }
         }
 
