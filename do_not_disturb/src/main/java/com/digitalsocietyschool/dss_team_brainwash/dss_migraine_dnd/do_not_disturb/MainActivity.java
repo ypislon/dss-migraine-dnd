@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(permissions, 1);
             }
 
+            // TODO SMS
 //            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
 //
 //                // Permission is not granted
@@ -171,11 +172,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected  void onResume() {
         super.onResume();
-
-//        Intent intentt = new Intent("TURN_HEADACHE_MODE_OFF");
-//        LocalBroadcastManager.getInstance(this).registerReceiver(listener, intentt);
-
-//        LocalBroadcastManager.getInstance(this).registerReceiver(listener, new IntentFilter("TURN_OFF_HEADACHE_MODE"));
 
         Bundle extras = this.getIntent().getExtras();
         SharedPreferences mPrefs = this.getSharedPreferences("dnd_mode", MODE_PRIVATE);
