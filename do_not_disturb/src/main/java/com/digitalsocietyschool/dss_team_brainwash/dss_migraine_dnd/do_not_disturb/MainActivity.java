@@ -8,13 +8,11 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.provider.Settings.System;
 import android.telephony.SmsManager;
-import android.view.ContextThemeWrapper;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.content.Intent;
@@ -41,32 +39,7 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
-    private int brightness;
-
-    private int MY_PERMISSIONS_REQUEST_READ_CONTACTS;
-
-    private int originalBrightness;
-
-    private boolean dndModeEnabled = false;
-
-    private boolean checked = false;
-
     private SharedPreferences mPrefs;
-
-
-    private BroadcastReceiver listener = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive( Context context, Intent intent ) {
-
-            String data = intent.getStringExtra("DATA");
-
-            Log.d("Received data 123: ", data);
-
-        }
-
-    };
-
 
 //    private static void showBrightnessPermissionDialog(final Context context) {
 //
@@ -112,48 +85,18 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        Bundle extras = this.getIntent().getExtras();
-        if(extras != null) {
-            if(extras.getBoolean("TURN_OFF_HEADACHE_MODE")) {
-                SharedPreferences.Editor edd = mPrefs.edit();
-                edd.putBoolean("headache_mode", false);
-                edd.apply();
-                Log.d("dnd", "eyyyy");
-            }
-        }
-
         Switch toggle = (Switch) findViewById(R.id.switch1);
         toggle.setChecked(mCurDndMode);
-        toggleDoNotDisturb(mCurDndMode);
-
-        // Register to receive messages.
-        // We are registering an observer (mMessageReceiver) to receive Intents
-        // with actions named "custom-event-name".
-//        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
-//                new IntentFilter("custom-event-name"));
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(listener, new IntentFilter("TURN_OFF_HEADACHE_MODE"));
-
-        Bundle extr = this.getIntent().getExtras();
-        if(extr != null) {
-            if(extr.getBoolean("headache_mode")) {
-                SharedPreferences.Editor edd = mPrefs.edit();
-                edd.putBoolean("headache_mode", false);
-                edd.apply();
-                Log.d("dnd", "eyyyy");
-            }
-        }
 
         // prompt the user for permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (Settings.System.canWrite(this)) {
-                originalBrightness = System.getInt(getContentResolver(), System.SCREEN_BRIGHTNESS, 0);
+                int originalBrightness = System.getInt(getContentResolver(), System.SCREEN_BRIGHTNESS, 0);
             } else {
                 Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
                 intent.setData(Uri.parse("package:" + MainActivity.this.getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-
             }
 
             if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED || checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_DENIED) {
@@ -188,12 +131,10 @@ public class MainActivity extends AppCompatActivity {
                 Date currentTime = Calendar.getInstance().getTime();
 
                 if (((CompoundButton) v).isChecked() && mPrefs.getBoolean("headache_mode", false)) {
-
                     // Save the timestamp of the start of headache attack
                     Log.d("dnd", "headache started at " + currentTime);
                 }
                 else if(!mPrefs.getBoolean("headache_mode", false)) {
-
                     // Save the timestamp of the end of headache attack
                     Log.d("dnd", "headache ended at " + currentTime);
                 }
@@ -204,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
 
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
                 if (isChecked) {
                     // The toggle is enabled
                     ed.putBoolean("headache_mode", true);
@@ -225,11 +165,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
 
         SharedPreferences mPrefs = this.getSharedPreferences("dnd_mode", MODE_PRIVATE);
-//        boolean mCurDndMode = mPrefs.getBoolean("headache_mode", false);
-
-//        SharedPreferences.Editor ed = mPrefs.edit();
-//        ed.putBoolean("headache_mode", dndModeEnabled);
-//        ed.apply();
         Log.d("dnd", "Local storage says " + mPrefs.getBoolean("headache_mode", false));
     }
 
@@ -240,15 +175,19 @@ public class MainActivity extends AppCompatActivity {
 //        Intent intentt = new Intent("TURN_HEADACHE_MODE_OFF");
 //        LocalBroadcastManager.getInstance(this).registerReceiver(listener, intentt);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(listener, new IntentFilter("TURN_OFF_HEADACHE_MODE"));
+//        LocalBroadcastManager.getInstance(this).registerReceiver(listener, new IntentFilter("TURN_OFF_HEADACHE_MODE"));
 
         Bundle extras = this.getIntent().getExtras();
+        SharedPreferences mPrefs = this.getSharedPreferences("dnd_mode", MODE_PRIVATE);
+        Log.d("dnd", "Local storage in resume says " + mPrefs.getBoolean("headache_mode", false));
+
         if(extras != null) {
             if(extras.getBoolean("TURN_OFF_HEADACHE_MODE")) {
                 SharedPreferences.Editor edd = mPrefs.edit();
                 edd.putBoolean("headache_mode", false);
                 edd.apply();
-                Log.d("dnd", "eyyyy");
+                Switch toggle = (Switch) findViewById(R.id.switch1);
+                toggle.setChecked(false);
             }
         }
 
@@ -322,15 +261,9 @@ public class MainActivity extends AppCompatActivity {
                         notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-                // TODO
-                LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
-//                Intent turnOffIntent = new Intent("TURN_OFF_HEADACHE_MODE");
-//                not needed, because we give the pending intent to the notification
-//                localBroadcastManager.sendBroadcast(turnOffIntent);
-
                 Intent turnOffIntent = new Intent(this, MainActivity.class);
                 turnOffIntent.putExtra("TURN_OFF_HEADACHE_MODE", true);
-                PendingIntent turnOffHeadacheModeIntent = PendingIntent.getBroadcast(this, 0, turnOffIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                PendingIntent turnOffHeadacheModeIntent = PendingIntent.getActivity(this, 0, turnOffIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default")
                         .setAutoCancel(true)
@@ -381,7 +314,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // block all incoming phone calls
-
 
     }
 }
