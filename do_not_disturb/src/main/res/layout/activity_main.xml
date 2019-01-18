@@ -32,7 +32,7 @@
         android:text="HTTP test"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/switch1" />
+        app:layout_constraintTop_toBottomOf="@+id/switchSilent" />
 
     <Switch
         android:id="@+id/switch1"
@@ -51,6 +51,83 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView"
+        tools:checked="false" />
+
+
+    <Switch
+        android:id="@+id/switchBrightness"
+        android:layout_width="212dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="86dp"
+        android:layout_marginLeft="86dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="86dp"
+        android:layout_marginRight="86dp"
+        android:checked="false"
+        android:text="Dim brightness"
+        android:textOff="Off"
+        android:textOn="On"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switch1"
+        tools:checked="false" />
+
+    <Switch
+        android:id="@+id/switchBlockCalls"
+        android:layout_width="212dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="86dp"
+        android:layout_marginLeft="86dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="86dp"
+        android:layout_marginRight="86dp"
+        android:checked="false"
+        android:text="Block calls"
+        android:textOff="Off"
+        android:textOn="On"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switchBrightness"
+        tools:checked="false" />
+
+    <Switch
+        android:id="@+id/switchSMS"
+        android:layout_width="212dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="86dp"
+        android:layout_marginLeft="86dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="86dp"
+        android:layout_marginRight="86dp"
+        android:checked="false"
+        android:text="Send automated sms"
+        android:textOff="Off"
+        android:textOn="On"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switchBlockCalls"
+        tools:checked="false" />
+
+    <Switch
+        android:id="@+id/switchSilent"
+        android:layout_width="212dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="86dp"
+        android:layout_marginLeft="86dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="86dp"
+        android:layout_marginRight="86dp"
+        android:checked="false"
+        android:text="Turn off sounds and notifications"
+        android:textOff="Off"
+        android:textOn="On"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switchSMS"
         tools:checked="false" />
 
 </android.support.constraint.ConstraintLayout>

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -38,17 +39,22 @@ public class IncomingCallReceiver extends BroadcastReceiver {
                         telephonyService.endCall();
                         Toast.makeText(context, "Ending the call from: " + number, Toast.LENGTH_SHORT).show();
                         SmsManager manager = SmsManager.getDefault();
-                        try {
-                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
-                                    != PackageManager.PERMISSION_GRANTED) {
-                                // Permission is not granted
-                                Log.e("dnd", "no sms permission");
-                            }
 
-                            manager.sendTextMessage(number, null, "I have a migraine attack right now. Please contact me later.", null, null);
-                        } catch (Exception e) {
-                            Log.e("dnd", "Fatal: couldn't send SMS." + e);
-                            Toast.makeText(context, "You have to give the app the permission to send SMS.", Toast.LENGTH_SHORT).show();
+                        SharedPreferences mPrefs = context.getSharedPreferences("dnd_mode", Context.MODE_PRIVATE);
+
+                        if(mPrefs.getBoolean("headache_mode_c_sms", false)) {
+                            try {
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
+                                        != PackageManager.PERMISSION_GRANTED) {
+                                    // Permission is not granted
+                                    Log.e("dnd", "no sms permission");
+                                }
+
+                                manager.sendTextMessage(number, null, "I have a migraine attack right now. Please contact me later.", null, null);
+                            } catch (Exception e) {
+                                Log.e("dnd", "Fatal: couldn't send SMS." + e);
+                                Toast.makeText(context, "You have to give the app the permission to send SMS.", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     }
 

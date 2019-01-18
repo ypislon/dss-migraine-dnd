@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.provider.Settings.System;
 import android.telephony.SmsManager;
+import android.text.Layout;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.content.Intent;
@@ -101,10 +102,36 @@ public class MainActivity extends AppCompatActivity {
         boolean mCurDndMode = mPrefs.getBoolean("headache_mode", false);
         Log.d("dnd", "Local storage onCreate says " + mCurDndMode);
 
+        final SharedPreferences.Editor ed = mPrefs.edit();
+        if(!mPrefs.contains("headache_mode_c_sms")) {
+            ed.putBoolean("headache_mode_c_sms", false);
+        }
+        if(!mPrefs.contains("headache_mode_c_block_phone")) {
+            ed.putBoolean("headache_mode_c_block_phone", false);
+        }
+        if(!mPrefs.contains("headache_mode_c_brightness")) {
+            ed.putBoolean("headache_mode_c_brightness", false);
+        }
+        if(!mPrefs.contains("headache_mode_c_silent")) {
+            ed.putBoolean("headache_mode_c_silent", false);
+        }
+        ed.apply();
+
         setContentView(R.layout.activity_main);
 
         Switch toggle = (Switch) findViewById(R.id.switch1);
         toggle.setChecked(mCurDndMode);
+
+        Switch toggleCSms = findViewById(R.id.switchSMS);
+        toggleCSms.setChecked(mPrefs.getBoolean("headache_mode_c_sms", false));
+        Switch toggleCBlockCalls = findViewById(R.id.switchBlockCalls);
+        toggleCBlockCalls.setChecked(mPrefs.getBoolean("headache_mode_c_block_phone", false));
+        Switch toggleCSilent = findViewById(R.id.switchSilent);
+        toggleCSilent.setChecked(mPrefs.getBoolean("headache_mode_c_silent", false));
+        Switch toggleCBrightness = findViewById(R.id.switchBrightness);
+        toggleCBrightness.setChecked(mPrefs.getBoolean("headache_mode_c_brightness", false));
+
+//        Switch toggleSwitch =
 
         // prompt the user for permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -165,8 +192,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final SharedPreferences.Editor ed = mPrefs.edit();
-
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
@@ -182,6 +207,64 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        toggleCSms.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+                    ed.putBoolean("headache_mode_c_sms", true);
+                    ed.apply();
+                } else {
+                    // The toggle is disabled
+                    ed.putBoolean("headache_mode_c_sms", false);
+                    ed.apply();
+                }
+            }
+        });
+
+        toggleCBlockCalls.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+                    ed.putBoolean("headache_mode_c_sms", true);
+                    ed.apply();
+                } else {
+                    // The toggle is disabled
+                    ed.putBoolean("headache_mode_c_sms", false);
+                    ed.apply();
+                }
+            }
+        });
+
+        toggleCSilent.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+                    ed.putBoolean("headache_mode_c_silent", true);
+                    ed.apply();
+                } else {
+                    // The toggle is disabled
+                    ed.putBoolean("headache_mode_c_silent", false);
+                    ed.apply();
+                }
+            }
+        });
+
+
+        toggleCBrightness.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+                    ed.putBoolean("headache_mode_c_brightness", true);
+                    ed.apply();
+                } else {
+                    // The toggle is disabled
+                    ed.putBoolean("headache_mode_c_brightness", false);
+                    ed.apply();
+                }
+            }
+        });
+
     }
 
     @Override
@@ -253,22 +336,17 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences mPrefs = this.getSharedPreferences("dnd_mode", MODE_PRIVATE);
 
             if(mPrefs.getBoolean("headache_mode", false) && enabled) {
-                // Dim the screen
-                int brightness = 0;
-                System.putInt(getContentResolver(), System.SCREEN_BRIGHTNESS, brightness);
 
-                // Set media playback to silent
-                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+                //// Change up UI
+                Switch toggleCSms = findViewById(R.id.switchSMS);
+                toggleCSms.setEnabled(false);
+                Switch toggleCBlockCalls = findViewById(R.id.switchBlockCalls);
+                toggleCBlockCalls.setEnabled(false);
+                Switch toggleCSilent = findViewById(R.id.switchSilent);
+                toggleCSilent.setEnabled(false);
+                Switch toggleCBrightness = findViewById(R.id.switchBrightness);
+                toggleCBrightness.setEnabled(false);
 
-                // Change the global notification policy to prevent all notifications
-                mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE);
-                if (ringerMode != 0) {
-                    try {
-                        mAudioManager.setRingerMode(0);
-                    } catch (Exception e) {
-                        Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
-                    }
-                }
                 // Set the background color
                 int color = ContextCompat.getColor(getApplicationContext(), R.color.colorDark);
                 ConstraintLayout mainLayout = findViewById(R.id.mainLayout);
@@ -282,8 +360,8 @@ public class MainActivity extends AppCompatActivity {
 
                 // Put notification up to comfort user and disable headache mode
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    CharSequence name = "123";
-                    String description = "12345";
+                    CharSequence name = "Default";
+                    String description = "Default notification group for the headache app.";
                     int importance = NotificationManager.IMPORTANCE_DEFAULT;
                     NotificationChannel channel = new NotificationChannel("default", name, importance);
                     channel.setDescription(description);
@@ -291,14 +369,13 @@ public class MainActivity extends AppCompatActivity {
                     notificationManager.createNotificationChannel(channel);
                 }
 
-                String textTitle = "123";
-                String textContent = "a littleb it of content";
+                String textTitle = "Feel any better yet?";
+                String textContent = "Remember to switch off the headache mode when you are recovered.";
 
                 Intent notificationIntent = new Intent(this, MainActivity.class);
                 notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 PendingIntent intent = PendingIntent.getActivity(this, 0,
                         notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
 
                 Intent turnOffIntent = new Intent(this, MainActivity.class);
                 turnOffIntent.putExtra("TURN_OFF_HEADACHE_MODE", true);
@@ -316,30 +393,36 @@ public class MainActivity extends AppCompatActivity {
                 // Enable the notification which comforts the user
                 mNotificationManager.notify(1, mBuilder.build());
 
-                // Block phone calls
-                phoneBlocker = new IncomingCallReceiver();
-                IntentFilter phoneBlFilter = new IntentFilter();
-                phoneBlFilter.addAction("android.intent.action.PHONE_STATE");
-                registerReceiver(phoneBlocker, phoneBlFilter);
+                if(mPrefs.getBoolean("headache_mode_c_brightness", false)) {
+                    // Dim the screen
+                    int brightness = 0;
+                    System.putInt(getContentResolver(), System.SCREEN_BRIGHTNESS, brightness);
+                }
 
-            } else if (!mPrefs.getBoolean("headache_mode", false) && !enabled) { // dnd mode is not enabled
-                // Set the brightness up again
-                System.putInt(getContentResolver(), System.SCREEN_BRIGHTNESS, 70);
+                if(mPrefs.getBoolean("headache_mode_c_silent", false)) {
+                    // Set media playback to silent
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
 
-                // Set media playback to loud
-                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2), 0);
-
-                // TODO unblock all notification
-                mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL);
-
-                // Set alarm and call volume up
-                if (ringerMode == 0) {
-                    try {
-                        mAudioManager.setRingerMode(1);
-                    } catch (Exception e) {
-                        Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
+                    // Change the global notification policy to prevent all notifications
+                    mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE);
+                    if (ringerMode != 0) {
+                        try {
+                            mAudioManager.setRingerMode(0);
+                        } catch (Exception e) {
+                            Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
+                        }
                     }
                 }
+
+                if(mPrefs.getBoolean("headache_mode_c_block_phone", false)) {
+                    // Block phone calls
+                    phoneBlocker = new IncomingCallReceiver();
+                    IntentFilter phoneBlFilter = new IntentFilter();
+                    phoneBlFilter.addAction("android.intent.action.PHONE_STATE");
+                    registerReceiver(phoneBlocker, phoneBlFilter);
+                }
+
+            } else if (!mPrefs.getBoolean("headache_mode", false) && !enabled) { // dnd mode is not enabled
 
                 // Set the background color to bright
                 int color = ContextCompat.getColor(getApplicationContext(), R.color.colorLight);
@@ -353,12 +436,43 @@ public class MainActivity extends AppCompatActivity {
                 Switch toggle = (Switch) findViewById(R.id.switch1);
                 toggle.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorDark));
 
+                Switch toggleCSms = findViewById(R.id.switchSMS);
+                toggleCSms.setEnabled(true);
+                Switch toggleCBlockCalls = findViewById(R.id.switchBlockCalls);
+                toggleCBlockCalls.setEnabled(true);
+                Switch toggleCSilent = findViewById(R.id.switchSilent);
+                toggleCSilent.setEnabled(true);
+                Switch toggleCBrightness = findViewById(R.id.switchBrightness);
+                toggleCBrightness.setEnabled(true);
+
                 // Cancel the notification to turn off headache mode
                 mNotificationManager.cancel(1);
 
                 if (phoneBlocker != null) {
                     unregisterReceiver(phoneBlocker);
                     phoneBlocker = null;
+                }
+
+                if(mPrefs.getBoolean("headache_mode_c_brightness", false)) {
+                    // Set the brightness up again
+                    System.putInt(getContentResolver(), System.SCREEN_BRIGHTNESS, 70);
+                }
+
+                if(mPrefs.getBoolean("headache_mode_c_silent", false)) {
+                    // Set media playback to loud
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2), 0);
+
+                    // Set alarm and call volume up
+                    if (ringerMode == 0) {
+                        try {
+                            mAudioManager.setRingerMode(1);
+                        } catch (Exception e) {
+                            Log.e("dnd", "Fatal error. Couldn't set ringer mode.");
+                        }
+                    }
+
+                    // TODO unblock all notification
+                    mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL);
                 }
             }
         }
