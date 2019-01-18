@@ -34,12 +34,30 @@ import android.support.v4.content.ContextCompat;
 import android.widget.Switch;
 import android.widget.CompoundButton;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
+
+//import okhttp3.OkHttpClient;
+//import okhttp3.Request;
+//import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
     private SharedPreferences mPrefs;
+
+    private BroadcastReceiver phoneBlocker;
 
 //    private static void showBrightnessPermissionDialog(final Context context) {
 //
@@ -101,6 +119,11 @@ public class MainActivity extends AppCompatActivity {
 
             if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED || checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_DENIED) {
                 String[] permissions = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE};
+                requestPermissions(permissions, 1);
+            }
+
+            if(checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_DENIED) {
+                String[] permissions = {Manifest.permission.SEND_SMS};
                 requestPermissions(permissions, 1);
             }
 
@@ -167,6 +190,26 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences mPrefs = this.getSharedPreferences("dnd_mode", MODE_PRIVATE);
         Log.d("dnd", "Local storage says " + mPrefs.getBoolean("headache_mode", false));
+
+        if(!mPrefs.getBoolean("headache_mode", false)) {
+            if (phoneBlocker != null) {
+                unregisterReceiver(phoneBlocker);
+                phoneBlocker = null;
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        SharedPreferences mPrefs = this.getSharedPreferences("dnd_mode", MODE_PRIVATE);
+        Log.d("dnd", "Local storage says " + mPrefs.getBoolean("headache_mode", false));
+
+        if (phoneBlocker != null) {
+            unregisterReceiver(phoneBlocker);
+            phoneBlocker = null;
+        }
+
+        super.onDestroy();
     }
 
     @Override
@@ -273,6 +316,12 @@ public class MainActivity extends AppCompatActivity {
                 // Enable the notification which comforts the user
                 mNotificationManager.notify(1, mBuilder.build());
 
+                // Block phone calls
+                phoneBlocker = new IncomingCallReceiver();
+                IntentFilter phoneBlFilter = new IntentFilter();
+                phoneBlFilter.addAction("android.intent.action.PHONE_STATE");
+                registerReceiver(phoneBlocker, phoneBlFilter);
+
             } else if (!mPrefs.getBoolean("headache_mode", false) && !enabled) { // dnd mode is not enabled
                 // Set the brightness up again
                 System.putInt(getContentResolver(), System.SCREEN_BRIGHTNESS, 70);
@@ -306,10 +355,67 @@ public class MainActivity extends AppCompatActivity {
 
                 // Cancel the notification to turn off headache mode
                 mNotificationManager.cancel(1);
+
+                if (phoneBlocker != null) {
+                    unregisterReceiver(phoneBlocker);
+                    phoneBlocker = null;
+                }
             }
         }
 
         // block all incoming phone calls
 
+
+
+    }
+
+    public void testHttpCall(View v) {
+        // TODO
+
+        Log.d("dnd", "http called");
+
+        final TextView mButtonTextView = (TextView) findViewById(R.id.button1);
+
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="http://www.google.com";
+
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        mButtonTextView.setText("Response is: "+ response.substring(0,20));
+                        Log.d("dnd", response.substring(0,10));
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                mButtonTextView.setText("That didn't work!");
+            }
+        });
+
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+
+//        OkHttpClient client = new OkHttpClient();
+//
+//        TextView txtString;
+//
+//        String url = "https://reqres.in/api/user/2";
+//
+//        String run(url) throws IOException {
+//            Request request = new Request.Builder()
+//                    .url(url)
+//                    .build();
+//
+//            try (Response response = client.newCall(request).execute()) {
+////                return response.body().string();
+//                return;
+//            } catch (IOException e) {
+//                Log.e("dnd", "IOException!" + e);
+//            }
+//        }
     }
 }
